@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pandas as pd
 import sqlite3
-from pandas_datareader import data as web
+# from pandas_datareader import data as web
 from progressbar import ProgressBar
 import logging
 
