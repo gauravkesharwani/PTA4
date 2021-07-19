@@ -2,9 +2,9 @@ from datetime import date, timedelta
 import pandas as pd
 import sqlite3
 import statsmodels.regression.linear_model as rg
-
+import yfinance as yf
 import numpy as np
-from pandas_datareader import data as web
+# from pandas_datareader import data as web
 from statsmodels.tsa.stattools import adfuller, coint
 # from arch.unitroot import PhillipsPerron
 from progressbar import ProgressBar
@@ -13,9 +13,9 @@ years = 2
 startdate = date.today() - timedelta(days=365 * years)
 enddate = date.today()
 
-etflist = pd.read_csv('SymbolGroups.csv')
+etflist = pd.read_csv('Data/SymbolGroups.csv')
 print(list(etflist.columns))
-conx = sqlite3.connect('pairs.db')
+conx = sqlite3.connect('Data/pairs.db')
 
 pbar = ProgressBar()
 
@@ -23,8 +23,9 @@ for i in pbar(etflist.columns):
 
     print('Reading {0}'.format(i))
     tickers = list(etflist[i].dropna())
+    info = yf.download(tickers, period='2y', interval='1d')['Adj Close']
 
-    info = web.DataReader(tickers, data_source='yahoo', start=startdate, end=enddate)['Adj Close']
+    # info = web.DataReader(tickers, data_source='yahoo', start=startdate, end=enddate)['Adj Close']
     # print(info)
 
     corr = info.corr().unstack()

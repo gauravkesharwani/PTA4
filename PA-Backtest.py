@@ -3,28 +3,29 @@ from datetime import timedelta
 
 import pandas as pd
 import sqlite3
-# from pandas_datareader import data as web
+import yfinance as yf
 from progressbar import ProgressBar
 import logging
 
-logging.basicConfig(filename='PA-Backtest.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='Log\PA-Backtest.log', encoding='utf-8', level=logging.DEBUG,
+                    format='%(asctime)s - %(message)s')
 
-con = sqlite3.connect('pairs.db')
+con = sqlite3.connect('Data\pairs.db')
 
 
 def get_spread_const(s1, s2, constDate, info):
     info['diff'] = info[s1] / info[s2]
     info['MA20Day'] = info['diff'].rolling(window=20).mean()
-    # print(info)
+    print(info.loc[str(constDate), 'MA20Day'])
     return round(info.loc[str(constDate), 'MA20Day'], 2)
 
 
 def back_test(s1, s2):
-    constDate = datetime.today().date() - timedelta(days=397)
+    constDate = datetime.today().date() - timedelta(days=395)
     startDate = constDate - timedelta(30)
     endDate = datetime.today().date()
 
-    info = web.DataReader([s1, s2], data_source='yahoo', start=startDate, end=endDate)['Adj Close']
+    info = yf.download([s1, s2], start=startDate, end=endDate)['Close']
 
     n = get_spread_const(s1, s2, constDate, info)
 
@@ -127,16 +128,17 @@ def back_test(s1, s2):
 
     info.rename({s1: 'S1OpenPrice', s2: 'S2OpenPrice'}, axis=1, inplace=True)
     # info.to_sql(name='BackTest4', con=con, if_exists='append')
-    info.to_csv('BTResult.csv')
+    info.to_csv('Data\BTResult.csv')
 
+df = pd.read_sql_query(
+    "select * from CorrelatedPairs where StartDate='2019-07-15' and [ADF p-value]<=0.05 and [ADF p-value]!=0", con)
+df.drop_duplicates(subset=['Symbol1', 'Symbol2'], inplace=True)
+print(df)
 
-# df = pd.read_sql_query("SELECT * from CorrelatedPairs", con)
-# df = df.drop_duplicates(subset=['Symbol1', 'Symbol2'])
-# pairs = df[df['ADF p-value'] <= 0.05]
+pbar = ProgressBar()
 
-# pbar = ProgressBar()
-
-# for index in pbar(pairs.index[6500:]):
-
-back_test('STRO','SRRK')
-logging.debug('Backtested Pair #{0} {1}-{2}'.format(index.s1,s2))
+for index in pbar(df.index[:1]):
+    s1 = df['Symbol1'][index]
+    s2 = df['Symbol2'][index]
+    back_test(s1, s2)
+    logging.debug('Backtested Pair #{0} {1}-{2}'.format(index, s1, s2))

@@ -3,7 +3,7 @@ from datetime import date
 import pandas as pd
 import matplotlib.pyplot as plt
 
-pair_trades = pd.read_excel('Pair Trades.xlsx', sheet_name='Pair Trades', parse_dates=['Open Date', 'Close Date'])
+pair_trades = pd.read_excel('Data/Pair Trades.xlsx', sheet_name='Pair Trades', parse_dates=['Open Date', 'Close Date'])
 pair_trades['S1 PnL'] = (pair_trades['S1 Close Price'] - pair_trades['S1 Price']) * pair_trades['S1 Qty']
 pair_trades['S1 PnL%'] = (pair_trades['S1 PnL'] * 100) / (pair_trades['S1 Price'] * abs(pair_trades['S1 Qty']))
 pair_trades['S2 PnL'] = (pair_trades['S2 Close Price'] - pair_trades['S2 Price']) * pair_trades['S2 Qty']
@@ -110,7 +110,7 @@ cumsum.reset_index().plot(x='Close Date', y='PnL', legend=False)
 # plt.show()
 plt.savefig('PnL.pdf')
 
-with pd.ExcelWriter('Pair Trades.xlsx') as writer:
+with pd.ExcelWriter('Data/Pair Trades.xlsx') as writer:
     pair_trades.to_excel(writer, sheet_name='Pair Trades', index=False)
     trades.to_excel(writer, sheet_name='Trades', index=False)
     perf_report.to_excel(writer, sheet_name='Performance', index=False)
